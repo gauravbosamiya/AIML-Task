@@ -1,0 +1,118 @@
+1. How did you approach this problem? Explain full plan and execution.
+
+- Firstly I check that it is classification problem or regression problem
+- Here we have to predict sales demand (qty) which is a continuous number so it is a regression problem.
+- Now check the data we have two types of data (Image + tabular) to predict sales demand.
+- we have small dataset.  
+- since the dataset is small I am choosing ML model for final prediction. and DL just for extracting features from the image.
+
+# Data preprocessing
+- now extract design code from the images.
+- we have sales data also with columns (code, qty, rate, date) so after extracting code from image we will map  each image with its sales data by using ineer join.
+- Then we apply sum aggregation on qty because the same product have multiple entries.
+- Now we have final data. On which we will train the model
+
+# Final Dataset look like below
+code	    image_path	                                        qty	rate
+500001	    unzipped_data/1/WhatsApp Image 2026-04-29 at 1...  1032 1296.0
+10016728	unzipped_data/1/WhatsApp Image 2026-04-29 at 1...	24	875.0
+10019275	unzipped_data/1/WhatsApp Image 2026-04-29 at 1...	56	1650.0
+10021130	unzipped_data/1/WhatsApp Image 2026-04-29 at 1...	32	875.0
+10021131	unzipped_data/1/WhatsApp Image 2026-04-29 at 1...	28	875.0
+
+# Feature Extraction
+- Now coming to the feature extracting part we are using Transfer Learning to extract feature from the image because Dataset is small. Building CNN from scratch will cause to overfitting/underfitting problem. 
+- Using MobileNetV2 we are extracting features from the images. I am using MobileNetV2 because it is lightweight and works well when we have less data. 
+- Also I have used image augmentation because it helps the model to understand a variety of images
+
+# Model Building 
+- I am using XGBoost for final prediction because we have small data and XGBoost works well with extracted features + tabular data. 
+- our feature vector is 1281-dim and XGBoost handles high dim well.  
+
+
+# Model Training
+Since qty value is not stable so i applied log1p transformation on the target variable to stabilize training.
+And I am using GroupKFold cross validation (n_splits=5) to handle overfitting.
+
+-------------------------------------------------------------------------------------------
+
+2. How does your prediction system work? (logic/model)
+
+the prediction system is a multimodal pipeline it takes two inputs (design image + rate) and predicts the expected sales quantity (qty).
+
+Step 1 - Image goes into MobileNetV2
+
+The design image is resized to 224×224 and passed through MobileNetV2 (pretrained on ImageNet)
+MobileNetV2 extracts visual patterns from the image — shape, color, texture, design style
+Output is a 1280-dimensional feature vector representing the image
+
+Step 2 — Rate normalization
+
+The rate (price) is normalized by dividing by rate_max from training data
+This converts it to a value between 0 and 1
+Output is a 1-dimensional value
+
+Step 3 — Feature concatenated
+
+Both vectors are concatenated together
+[1280 image features] + [1 rate feature] = 1281-dimensional input vector
+
+Step 4 — XGBoost predicts
+
+the 1281-dim vector is pass into the trained XGBoost model
+XGBoost learned during training which image patterns + price combinations lead to high or low demand
+output is a log-scaled qty prediction
+
+Step 5 — Reverse log transformation
+
+during training, qty was transformed using log1p to handle values
+so at prediction time we reverse it using expm1 to get the actual qty
+final output is rounded to the nearest integer
+
+-------------------------------------------------------------------------------------------
+3. What patterns did you find in the data?
+so these are the top 3 products in each month which sales most.
+
+Period        Code      Qty
+Oct 2025	10016728	24
+Nov 2025	10019275	56
+Nov 2025	10021130	32
+Nov 2025	10021131	28
+Jan 2026	10022091	84
+Feb 2026	10022578	60
+Feb 2026	10025105	47
+Mar 2026	10025542	71
+Mar 2026	10025820	28
+Apr 2026	500001	   1032
+Apr 2026	10028268	110
+Apr 2026	10028269	72
+
+most sold product each month
+
+Period     Code      Qty
+Oct 2025  10016728    24
+Nov 2025  10019275    56
+Jan 2026  10022091    84
+Feb 2026  10022578    60
+Mar 2026  10025542    71
+Apr 2026    500001  1032
+
+-------------------------------------------------------------------------------------------
+4. Where can your system fail?
+
+- since the dataset is small. predictions for unusual designs will be unreliable
+- and it may be fail on blury image.
+- when multiple product in one image. 
+- rate outside training range (above ₹1650) may give unreliable predictions
+
+-------------------------------------------------------------------------------------------
+
+5. If you had more time, how would you improve this system?
+- Sometime current python script not extracting design code from the image because of it is not visible properly in image. so I can improve that for better extraction. 
+- Due to time constraint, I am not using date column in model training. so right now model not have seasonal or time awareness of product.
+- By using date column I can improve system and we predict that which type of design sales most in which month. 
+- Also by doing hyperparameter training, and trying other pretrained CNN model for feture extraction we improve this system
+- We can use PCA  for feature decomposition to improve system. 
+
+
+

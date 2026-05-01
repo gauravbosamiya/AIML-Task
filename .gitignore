@@ -1,0 +1,25 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+
+1
+2
+3
+4
+unzipped_data
+# 1.zip
+# image_code_output.csv
+image_code_output_1.csv
+# AI ML Task Sheet.csv
+uv.lock
+pyproject.toml
+.python-version
+model_building.ipynb
