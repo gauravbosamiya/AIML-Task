@@ -6,7 +6,7 @@
 - uv (package manager)
 
 #### Install uv (if not installed)
-pip install uv
+- pip install uv
 
 #### Step 1 — Clone the project
 - git clone https://github.com/gauravbosamiya/AIML-Task.git
@@ -16,10 +16,10 @@ pip install uv
 - uv venv .venv
 
 #### Activate (Windows)
-.venv\Scripts\activate
+- .venv\Scripts\activate
 
 #### Step 3 — Install dependencies
-uv pip install -r requirements.txt
+- uv pip install -r requirements.txt
 
 #### Step 4 — Run FastAPI backend (Terminal 1)
 - cd AIML-Task
@@ -29,4 +29,4 @@ uv pip install -r requirements.txt
 #### Step 5 — Run Streamlit frontend (Terminal 2)
 - cd AIML-Task
 - .venv\Scripts\activate
--streamlit run main.py
+- streamlit run main.py
