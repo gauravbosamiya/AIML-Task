@@ -24,7 +24,8 @@
 #### Step 4 — Run FastAPI backend (Terminal 1)
 - cd AIML-Task
 - .venv\Scripts\activate
-- uvicorn api:app --reload
+- uvicorn api:app --reload 
+- (wait 10 - 15 sec to start fastapi server before starting streamlit app) 
 
 #### Step 5 — Run Streamlit frontend (Terminal 2)
 - cd AIML-Task
