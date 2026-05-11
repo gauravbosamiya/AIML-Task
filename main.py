@@ -2,13 +2,11 @@ import streamlit as st
 import requests
 from PIL import Image
 import io
+from datetime import date
 
-API_URL = "http://127.0.0.1:8000"  
+API_URL = "http://127.0.0.1:8000"
 
-st.set_page_config(
-    page_title="Design Demand Predictor",
-    layout="centered"
-)
+st.set_page_config(page_title="Design Demand Predictor", layout="centered")
 
 @st.cache_data(ttl=30)
 def get_health():
@@ -20,11 +18,11 @@ def get_health():
 
 health = get_health()
 
-st.title("👗 Design Demand Predictor")
+st.title("Design Demand Predictor")
 st.markdown("Upload a design image and enter the rate to predict expected order quantity.")
 
 if health:
-    st.success(f"API Connected ")
+    st.success("API Connected")
 else:
     st.error("API Offline — make sure FastAPI server is running.")
 
@@ -38,7 +36,7 @@ with col1:
         type=["jpg", "jpeg", "png", "webp"],
     )
     if uploaded_file:
-        st.image(uploaded_file, caption="Uploaded Design", width='stretch')
+        st.image(uploaded_file, caption="Uploaded Design", width=300)
 
 with col2:
     rate_max_val = health["rate_max"] if health else 10000.0
@@ -52,11 +50,17 @@ with col2:
         help=f"Training rate max was ₹{rate_max_val:.0f}"
     )
 
+    launch_date = st.date_input(         
+        "Launch Date",
+        value=date.today(),
+        help="Expected launch date of the new product"
+    )
+
     if health and rate > health["rate_max"]:
         st.warning(f"Rate exceeds training max ₹{health['rate_max']:.0f}")
 
     st.markdown("###")
-    predict_btn = st.button("Predict Demand", width='stretch', type="primary")
+    predict_btn = st.button("Predict Demand", type="primary")
 
 st.divider()
 
@@ -71,7 +75,10 @@ if predict_btn:
                 response = requests.post(
                     f"{API_URL}/predict",
                     files={"image": (uploaded_file.name, uploaded_file.getvalue(), uploaded_file.type)},
-                    data={"rate": rate},
+                    data={
+                        "rate": rate,
+                        "launch_date": str(launch_date),   
+                    },
                     timeout=30
                 )
 
@@ -96,8 +103,15 @@ if predict_btn:
                     if result["rate_warning"]:
                         st.warning("Rate is higher than training data — prediction may be less accurate.")
 
+                    st.caption(f"Detected labels: {', '.join(result['detected_labels'])}")  # ← added
+
                 else:
-                    st.error(f"API Error {response.status_code}: {response.json().get('detail', 'Unknown error')}")
+                    detail = response.json().get('detail', 'Unknown error')
+                    if response.status_code == 400 and "blocked" in detail.lower():
+                        st.warning(f"{detail}")
+                    else:
+                        st.error(f"API Error {response.status_code}: {detail}")
+
 
             except requests.exceptions.ConnectionError:
                 st.error("Cannot connect to API. Is the FastAPI server running?")

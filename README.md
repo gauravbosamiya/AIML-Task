@@ -31,3 +31,4 @@
 - cd AIML-Task
 - .venv\Scripts\activate
 - streamlit run main.py
+
