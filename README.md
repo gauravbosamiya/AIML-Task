@@ -1,5 +1,3 @@
-## Name - Bosamiya Gauravkumar
-## Mobile No. - 7698099022
 
 #### Prerequisites
 - Python 3.9 or above
